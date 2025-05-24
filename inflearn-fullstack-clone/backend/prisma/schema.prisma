@@ -8,6 +8,12 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator prismaClassGenerator {
+  provider               = "prisma-class-generator"
+  dryRun                 = "false"
+  separateRelationFields = "false"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -84,18 +90,19 @@ model Course {
   price            Int      @default(0)
   discountPrice    Int?     @map("discount_price")
   level            String   @default("BEGINEER")
+  status           String   @default("DRAFT")
   instructorId     String   @map("instructor_id")
   isPublished      Boolean  @default(false) @map("is_published")
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
-  sections          Section[]
-  lectures          Lecture[]
-  category          CourseCategory[]
-  courseEnrollments CourseEnrollment[]
-  instructor        User               @relation(fields: [instructorId], references: [id])
-  courseReviews     CourseReview[]
-  courseQuestions   CourseQuestion[]
+  sections    Section[]
+  lectures    Lecture[]
+  categories  CourseCategory[]
+  enrollments CourseEnrollment[]
+  instructor  User               @relation(fields: [instructorId], references: [id])
+  reviews     CourseReview[]
+  questions   CourseQuestion[]
 
   @@map("courses")
 }
@@ -189,9 +196,9 @@ model CourseQuestion {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  course         Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseComments CourseComment[]
+  course   Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments CourseComment[]
 
   @@map("course_questions")
 }
@@ -204,8 +211,8 @@ model CourseComment {
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
-  courseQuestions CourseQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question CourseQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("course_comments")
 }
