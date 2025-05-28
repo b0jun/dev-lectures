@@ -34,7 +34,7 @@ export default function InstructorSidebar() {
               key={item.label}
               variant="link"
               className={`justify-start w-full text-base font-medium ${
-                isActive ? 'text-[#1dc078] font-bold' : 'text-gray-700'
+                isActive ? 'text-primary font-bold' : 'text-gray-700'
               }`}
               asChild={!item.isPreparing}
               onClick={item.isPreparing ? handlePreparingClick : undefined}
