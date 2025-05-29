@@ -55,6 +55,6 @@ export class MediaService {
   }
 
   getMediaUrl(key: string) {
-    return `${this.cloudFrontDomain}/${key}`;
+    return `https://${this.cloudFrontDomain}/${key}`;
   }
 }
