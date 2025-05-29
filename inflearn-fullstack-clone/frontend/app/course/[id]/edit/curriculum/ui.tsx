@@ -4,6 +4,8 @@ import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
 import { Trash2, Lock, LockOpen, Plus, Edit } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Course, Section, Lecture, CourseCategory, LectureActivity } from '@/generated/openapi-client';
@@ -11,23 +13,28 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import * as api from '@/lib/api';
 import { notFound } from 'next/navigation';
 import { toast } from 'sonner';
+import { EditLectureDialog } from '@/app/course/[id]/edit/curriculum/_components/edit-lecture-dialog';
 
 export default function UI({ initialCourse }: { initialCourse: Course }) {
   const queryClient = useQueryClient();
 
-  // * 강의 추가 Dialog 상태
+  // 강의 추가 Dialog 상태
   const [addLectureSectionId, setAddLectureSectionId] = useState<string | null>(null);
   const [addLectureTitle, setAddLectureTitle] = useState('');
   const [lectureDialogOpen, setLectureDialogOpen] = useState(false);
-  // * 섹션 추가 상태
+  // 섹션 추가 상태
   const [addSectionTitle, setAddSectionTitle] = useState('');
-  // * 섹션별 임시 제목 상태
+  // 섹션별 임시 제목 상태
   const [sectionTitles, setSectionTitles] = useState<Record<string, string>>({});
+  // 강의 수정 Dialog 상태
+  const [editLecture, setEditLecture] = useState<Lecture | null>(null);
+  const [isEditLectureDialogOpen, setIsEditLectureDialogOpen] = useState(false);
 
-  // * 코스 데이터 조회
+  // 코스 데이터 조회
   const { data: course } = useQuery<Course>({
     queryKey: ['course', initialCourse.id],
     queryFn: async () => {
+      // TODO: 실제 API 호출로 대체
       const { data } = await api.getCourseById(initialCourse.id);
       if (!data) {
         notFound();
@@ -37,7 +44,7 @@ export default function UI({ initialCourse }: { initialCourse: Course }) {
     },
   });
 
-  // *섹션 추가
+  // 섹션 추가
   const addSectionMutation = useMutation({
     mutationFn: async (title: string) => {
       const { data, error } = await api.createSection(initialCourse.id, title);
@@ -55,7 +62,7 @@ export default function UI({ initialCourse }: { initialCourse: Course }) {
     },
   });
 
-  // * 섹션 삭제
+  // 섹션 삭제
   const deleteSectionMutation = useMutation({
     mutationFn: async (sectionId: string) => {
       const { data, error } = await api.deleteSection(sectionId);
@@ -73,7 +80,7 @@ export default function UI({ initialCourse }: { initialCourse: Course }) {
     },
   });
 
-  // * 강의 추가
+  // 강의 추가
   const addLectureMutation = useMutation({
     mutationFn: async ({ sectionId, title }: { sectionId: string; title: string }) => {
       const { data, error } = await api.createLecture(sectionId, title);
@@ -91,7 +98,7 @@ export default function UI({ initialCourse }: { initialCourse: Course }) {
     },
   });
 
-  // * 강의 삭제
+  // 강의 삭제
   const deleteLectureMutation = useMutation({
     mutationFn: async ({ lectureId }: { lectureId: string }) => {
       const { data, error } = await api.deleteLecture(lectureId);
@@ -109,7 +116,7 @@ export default function UI({ initialCourse }: { initialCourse: Course }) {
     },
   });
 
-  // * 섹션 제목 수정 mutation
+  // 섹션 제목 수정 mutation
   const updateSectionTitleMutation = useMutation({
     mutationFn: async ({ sectionId, title }: { sectionId: string; title: string }) => {
       const { data, error } = await api.updateSectionTitle(sectionId, title);
@@ -126,8 +133,10 @@ export default function UI({ initialCourse }: { initialCourse: Course }) {
     },
   });
 
+  // UI 핸들러
   const handleAddSection = () => {
-    addSectionMutation.mutate(addSectionTitle);
+    // '섹션 제목을 작성해주세요'로 바로 생성
+    addSectionMutation.mutate('섹션 제목을 작성해주세요');
     setAddSectionTitle('');
   };
 
@@ -177,13 +186,13 @@ export default function UI({ initialCourse }: { initialCourse: Course }) {
     deleteLectureMutation.mutate({ lectureId });
   };
 
-  // * 강의 미리보기 토글, 섹션 공개/비공개 토글 등은 TODO: mutation 추가 필요
+  // 강의 미리보기 토글, 섹션 공개/비공개 토글 등은 TODO: mutation 추가 필요
 
   if (!course) return <div>코스 정보를 불러올 수 없습니다.</div>;
 
   return (
-    <div className="space-y-8">
-      <Card>
+    <div className="space-y-8 flex flex-col items-center">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>
             <h1 className="text-2xl font-bold">커리큘럼</h1>
@@ -192,7 +201,7 @@ export default function UI({ initialCourse }: { initialCourse: Course }) {
       </Card>
 
       {course.sections?.map((section: Section, sectionIdx: number) => (
-        <div key={section.id} className="border rounded-lg p-4 bg-white">
+        <div key={section.id} className="border rounded-lg p-4 bg-white w-full">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <span className="text-green-600 font-semibold">섹션 {sectionIdx + 1}</span>
@@ -251,12 +260,12 @@ export default function UI({ initialCourse }: { initialCourse: Course }) {
                       <Lock className="text-gray-400" size={18} />
                     )}
                   </Button>
-                  {/* 수정 버튼 추가 */}
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => {
-                      /* TODO: 강의 수정 모달 오픈 */
+                      setEditLecture(lecture);
+                      setIsEditLectureDialogOpen(true);
                     }}
                     aria-label="강의 수정"
                   >
@@ -275,29 +284,17 @@ export default function UI({ initialCourse }: { initialCourse: Course }) {
               </div>
             ))}
           </div>
-          <div className="mt-3 flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => openLectureDialog(section.id)}>
+          <div className="mt-3 flex w-full justify-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => openLectureDialog(section.id)} className="bg-gray-50">
               <Plus size={16} className="mr-1" /> 수업 추가
             </Button>
           </div>
         </div>
       ))}
       {/* 섹션 추가 */}
-      <div className="border rounded-lg p-4 bg-gray-50">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-green-600 font-semibold">섹션 추가</span>
-          <Input
-            className="w-64"
-            value={addSectionTitle}
-            onChange={(e) => setAddSectionTitle(e.target.value)}
-            placeholder="섹션 제목을 작성해주세요. (최대 200자)"
-            maxLength={200}
-          />
-          <Button onClick={handleAddSection} variant="default" size="sm">
-            추가
-          </Button>
-        </div>
-      </div>
+      <Button onClick={handleAddSection} variant="default" size="lg" className="mx-auto text-md font-bold">
+        섹션 추가
+      </Button>
 
       {/* 강의 추가 Dialog */}
       <Dialog open={lectureDialogOpen} onOpenChange={setLectureDialogOpen}>
@@ -321,6 +318,18 @@ export default function UI({ initialCourse }: { initialCourse: Course }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* 강의 수정 Dialog */}
+      {editLecture && (
+        <EditLectureDialog
+          isOpen={isEditLectureDialogOpen}
+          onClose={() => {
+            setIsEditLectureDialogOpen(false);
+            setEditLecture(null);
+          }}
+          lecture={editLecture}
+        />
+      )}
     </div>
   );
 }

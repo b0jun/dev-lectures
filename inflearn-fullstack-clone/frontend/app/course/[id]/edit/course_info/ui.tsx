@@ -51,7 +51,7 @@ export default function EditCourseInfoUI({ course }: { course: Course }) {
     <Form {...form}>
       <form
         onSubmit={handleSubmit((data: FormValues) => updateCourseMutation.mutate(data))}
-        className="min-w-120 w-120 space-y-8 bg-white p-8 rounded-lg shadow"
+        className="space-y-8 bg-white p-8 rounded-lg shadow"
       >
         <FormField
           control={control}
