@@ -25,7 +25,7 @@ import { Prisma } from '@prisma/client';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { Course as CourseEntity } from 'src/_gen/prisma-class/course';
 
-@ApiTags('courses')
+@ApiTags('코스')
 @Controller('courses')
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
@@ -103,7 +103,43 @@ export class CoursesController {
   ) {
     const includeArray = include ? include.split(',') : undefined;
 
-    return this.coursesService.findOne(id, includeArray);
+    let includeObject: Prisma.CourseInclude;
+
+    if (
+      includeArray &&
+      includeArray.includes('sections') &&
+      includeArray.includes('lectures')
+    ) {
+      const otherInclude = includeArray.filter(
+        (item) => !['sections', 'lectures'].includes(item),
+      );
+      includeObject = {
+        sections: {
+          include: {
+            lectures: {
+              orderBy: {
+                order: 'asc',
+              },
+            },
+          },
+          orderBy: {
+            order: 'asc',
+          },
+        },
+        ...otherInclude.map((item) => ({
+          [item]: true,
+        })),
+      };
+    } else if (includeArray) {
+      includeObject = includeArray.reduce((acc, key) => {
+        acc[key] = true;
+        return acc;
+      }, {} as Prisma.CourseInclude);
+    } else {
+      includeObject = {};
+    }
+
+    return this.coursesService.findOne(id, includeObject);
   }
 
   @Patch(':id')
