@@ -1,7 +1,13 @@
+import { redirect } from 'next/navigation';
 import InstructorPageName from './_components/instructor-page-name';
 import InstructorSidebar from './_components/instructor-sidebar';
+import { auth } from '@/auth';
 
-export default function InstructorLayout({ children }: { children: React.ReactNode }) {
+export default async function InstructorLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  if (!session?.user?.email) {
+    redirect('/signin');
+  }
   return (
     <div className="flex flex-col">
       {/* 제목 */}
