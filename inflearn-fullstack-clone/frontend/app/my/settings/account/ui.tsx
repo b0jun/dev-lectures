@@ -24,7 +24,6 @@ const CKEditor = dynamic(() => import('@/components/ckeditor'), {
 
 export default function UI({ profile }: { profile: User }) {
   const [image, setImage] = useState<string>(profile.image || '');
-  console.log(image);
   const [name, setName] = useState(profile.name || '');
   const [bio, setBio] = useState(profile.bio || '');
   const [isUploading, setIsUploading] = useState(false);
@@ -52,12 +51,17 @@ export default function UI({ profile }: { profile: User }) {
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (file) {
-      const uploadMediaResult = await api.uploadMedia(file);
-      if (!uploadMediaResult.data || uploadMediaResult.error) {
-        toast.error(uploadMediaResult.error as string);
-        return;
+      setIsUploading(true);
+      try {
+        const uploadMediaResult = await api.uploadMedia(file);
+        if (!uploadMediaResult.data || uploadMediaResult.error) {
+          toast.error(uploadMediaResult.error as string);
+          return;
+        }
+        setImage((uploadMediaResult.data as any).cloudFront.url);
+      } finally {
+        setIsUploading(false);
       }
-      setImage((uploadMediaResult.data as any).cloudFront.url);
     }
   }, []);
 
