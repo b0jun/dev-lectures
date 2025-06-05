@@ -10,7 +10,6 @@ import { Course } from '@/generated/openapi-client';
 import { useMutation } from '@tanstack/react-query';
 import * as api from '@/lib/api';
 import { toast } from 'sonner';
-// import { AutosizeTextarea } from '@/components/ui/autosize-textarea';
 
 type FormValues = {
   title: string;
