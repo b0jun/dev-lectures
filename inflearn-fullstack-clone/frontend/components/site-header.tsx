@@ -1,13 +1,13 @@
 'use client';
 
 import { CourseCategory, User } from '@/generated/openapi-client';
-import { Layers, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { CATEGORY_ICONS } from '@/app/constants/category-icons';
 import React from 'react';
@@ -23,6 +23,7 @@ export default function SiteHeader({
   profile?: User;
   categories: CourseCategory[];
 }) {
+  const router = useRouter();
   const pathname = usePathname();
   const isSiteHeaderNeeded = !pathname.includes('/course/');
   const isCategoryNeeded = pathname == '/' || pathname.includes('/courses');
@@ -93,7 +94,7 @@ export default function SiteHeader({
               <div className="ml-2 cursor-pointer">
                 <Avatar>
                   {profile?.image ? (
-                    <img src={profile.image} alt="avatar" className="w-full h-full object-cover rounded-full" />
+                    <Image src={profile.image} alt="avatar" fill className="object-cover rounded-full" />
                   ) : (
                     <AvatarFallback>
                       <span role="img" aria-label="user">
@@ -111,7 +112,7 @@ export default function SiteHeader({
               </div>
               <button
                 className="w-full text-left px-4 py-3 hover:bg-gray-100 focus:outline-none"
-                onClick={() => (window.location.href = '/my/settings/account')}
+                onClick={() => router.push('/my/settings/account')}
               >
                 <div className="font-semibold text-gray-800">프로필 수정</div>
               </button>
@@ -141,7 +142,6 @@ export default function SiteHeader({
             {categories.map((category) => (
               <Link key={category.id} href={`/courses/${category.slug}`}>
                 <div className="category-item flex flex-col items-center min-w-[72px] text-gray-700 hover:text-[#1dc078] cursor-pointer transition-colors">
-                  {/* <Layers size={28} className="mb-1" /> */}
                   {React.createElement(CATEGORY_ICONS[category.slug] || CATEGORY_ICONS['default'], {
                     size: 28,
                     className: 'mb-1',
